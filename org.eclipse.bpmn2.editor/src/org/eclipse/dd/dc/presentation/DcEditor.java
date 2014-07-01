@@ -11,12 +11,12 @@
  *    Reiner Hille-Doering (SAP AG) - initial API and implementation and/or initial documentation
  * 
  * </copyright>
- *
  */
-package org.eclipse.bpmn2.presentation;
+package org.eclipse.dd.dc.presentation;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,9 +27,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.bpmn2.di.provider.BpmnDiItemProviderAdapterFactory;
-import org.eclipse.bpmn2.provider.Bpmn2ItemProviderAdapterFactory;
-import org.eclipse.bpmn2.util.Bpmn2XMIResourceImpl;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -37,61 +34,23 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.dd.dc.provider.DcItemProviderAdapterFactory;
-import org.eclipse.dd.di.provider.DiItemProviderAdapterFactory;
-import org.eclipse.emf.common.command.BasicCommandStack;
-import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CommandStack;
-import org.eclipse.emf.common.command.CommandStackListener;
-import org.eclipse.emf.common.notify.AdapterFactory;
-import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.common.ui.MarkerHelper;
-import org.eclipse.emf.common.ui.editor.ProblemEditorPart;
-import org.eclipse.emf.common.ui.viewer.IViewerProvider;
-import org.eclipse.emf.common.util.BasicDiagnostic;
-import org.eclipse.emf.common.util.Diagnostic;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EValidator;
-import org.eclipse.emf.ecore.impl.EStringToStringMapEntryImpl;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.util.EContentAdapter;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.emf.ecore.xmi.XMIResource;
-import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
-import org.eclipse.emf.edit.domain.EditingDomain;
-import org.eclipse.emf.edit.domain.IEditingDomainProvider;
-import org.eclipse.emf.edit.provider.AdapterFactoryItemDelegator;
-import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
-import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
-import org.eclipse.emf.edit.provider.resource.ResourceItemProviderAdapterFactory;
-import org.eclipse.emf.edit.ui.action.EditingDomainActionBarContributor;
-import org.eclipse.emf.edit.ui.celleditor.AdapterFactoryTreeEditor;
-import org.eclipse.emf.edit.ui.dnd.EditingDomainViewerDropAdapter;
-import org.eclipse.emf.edit.ui.dnd.LocalTransfer;
-import org.eclipse.emf.edit.ui.dnd.ViewerDragAdapter;
-import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
-import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
-import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
-import org.eclipse.emf.edit.ui.util.EditUIMarkerHelper;
-import org.eclipse.emf.edit.ui.util.EditUIUtil;
-import org.eclipse.emf.edit.ui.view.ExtendedPropertySheetPage;
+
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -101,16 +60,23 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
+
 import org.eclipse.swt.SWT;
+
 import org.eclipse.swt.custom.CTabFolder;
+
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+
 import org.eclipse.swt.graphics.Point;
+
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
+
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -118,28 +84,93 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.actions.WorkspaceModifyOperation;
+
 import org.eclipse.ui.dialogs.SaveAsDialog;
+
 import org.eclipse.ui.ide.IGotoMarker;
+
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.MultiPageEditorPart;
+
 import org.eclipse.ui.views.contentoutline.ContentOutline;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
+
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheet;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
+import org.eclipse.emf.common.command.BasicCommandStack;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.command.CommandStackListener;
+
+import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.notify.Notification;
+
+import org.eclipse.emf.common.ui.MarkerHelper;
+
+import org.eclipse.emf.common.ui.editor.ProblemEditorPart;
+
+import org.eclipse.emf.common.ui.viewer.IViewerProvider;
+
+import org.eclipse.emf.common.util.BasicDiagnostic;
+import org.eclipse.emf.common.util.Diagnostic;
+import org.eclipse.emf.common.util.URI;
+
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+
+import org.eclipse.emf.ecore.util.EContentAdapter;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+
+import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.domain.EditingDomain;
+import org.eclipse.emf.edit.domain.IEditingDomainProvider;
+
+import org.eclipse.emf.edit.provider.AdapterFactoryItemDelegator;
+import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
+
+import org.eclipse.emf.edit.provider.resource.ResourceItemProviderAdapterFactory;
+
+import org.eclipse.emf.edit.ui.action.EditingDomainActionBarContributor;
+
+import org.eclipse.emf.edit.ui.celleditor.AdapterFactoryTreeEditor;
+
+import org.eclipse.emf.edit.ui.dnd.EditingDomainViewerDropAdapter;
+import org.eclipse.emf.edit.ui.dnd.LocalTransfer;
+import org.eclipse.emf.edit.ui.dnd.ViewerDragAdapter;
+
+import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
+import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
+import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
+
+import org.eclipse.emf.edit.ui.util.EditUIMarkerHelper;
+import org.eclipse.emf.edit.ui.util.EditUIUtil;
+
+import org.eclipse.emf.edit.ui.view.ExtendedPropertySheetPage;
+
+import org.eclipse.dd.dc.provider.DcItemProviderAdapterFactory;
+
+import org.eclipse.bpmn2.di.provider.BpmnDiItemProviderAdapterFactory;
+
+import org.eclipse.bpmn2.presentation.Bpmn2EditorPlugin;
+
+import org.eclipse.bpmn2.provider.Bpmn2ItemProviderAdapterFactory;
+
+import org.eclipse.dd.di.provider.DiItemProviderAdapterFactory;
+
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
+
 /**
- * This is an example of a Bpmn2 model editor.
+ * This is an example of a Dc model editor.
  * <!-- begin-user-doc -->
  * <!-- end-user-doc -->
  * @generated
  */
-public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainProvider,
+public class DcEditor extends MultiPageEditorPart implements IEditingDomainProvider,
         ISelectionProvider, IMenuListener, IViewerProvider, IGotoMarker {
-    private static final String BPMN_XMI_FILE_EXTENSION = "bpmn2xmi";
-
     /**
      * This keeps track of the editing domain that is used to track all changes to the model.
      * <!-- begin-user-doc -->
@@ -248,16 +279,16 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
         public void partActivated(IWorkbenchPart p) {
             if (p instanceof ContentOutline) {
                 if (((ContentOutline) p).getCurrentPage() == contentOutlinePage) {
-                    getActionBarContributor().setActiveEditor(Bpmn2Editor.this);
+                    getActionBarContributor().setActiveEditor(DcEditor.this);
 
                     setCurrentViewer(contentOutlineViewer);
                 }
             } else if (p instanceof PropertySheet) {
                 if (propertySheetPages.contains(((PropertySheet) p).getCurrentPage())) {
-                    getActionBarContributor().setActiveEditor(Bpmn2Editor.this);
+                    getActionBarContributor().setActiveEditor(DcEditor.this);
                     handleActivate();
                 }
-            } else if (p == Bpmn2Editor.this) {
+            } else if (p == DcEditor.this) {
                 handleActivate();
             }
         }
@@ -429,7 +460,7 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
                         public void run() {
                             removedResources.addAll(visitor.getRemovedResources());
                             if (!isDirty()) {
-                                getSite().getPage().closeEditor(Bpmn2Editor.this, false);
+                                getSite().getPage().closeEditor(DcEditor.this, false);
                             }
                         }
                     });
@@ -439,7 +470,7 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
                     getSite().getShell().getDisplay().asyncExec(new Runnable() {
                         public void run() {
                             changedResources.addAll(visitor.getChangedResources());
-                            if (getSite().getPage().getActiveEditor() == Bpmn2Editor.this) {
+                            if (getSite().getPage().getActiveEditor() == DcEditor.this) {
                                 handleActivate();
                             }
                         }
@@ -470,7 +501,7 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
 
         if (!removedResources.isEmpty()) {
             if (handleDirtyConflict()) {
-                getSite().getPage().closeEditor(Bpmn2Editor.this, false);
+                getSite().getPage().closeEditor(DcEditor.this, false);
             } else {
                 removedResources.clear();
                 changedResources.clear();
@@ -588,7 +619,7 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
      * <!-- end-user-doc -->
      * @generated
      */
-    public Bpmn2Editor() {
+    public DcEditor() {
         super();
         initializeEditingDomain();
     }
@@ -1007,7 +1038,7 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
      * <!-- end-user-doc -->
      * @generated
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("unchecked")
     @Override
     public Object getAdapter(Class key) {
         if (key.equals(IContentOutlinePage.class)) {
@@ -1098,8 +1129,8 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
         PropertySheetPage propertySheetPage = new ExtendedPropertySheetPage(editingDomain) {
             @Override
             public void setSelectionToViewer(List<?> selection) {
-                Bpmn2Editor.this.setSelectionToViewer(selection);
-                Bpmn2Editor.this.setFocus();
+                DcEditor.this.setSelectionToViewer(selection);
+                DcEditor.this.setFocus();
             }
 
             @Override
@@ -1272,31 +1303,10 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
     /**
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
-     * @generated not
+     * @generated
      */
     protected void doSaveAs(URI uri, IEditorInput editorInput) {
-        if (uri.toString().endsWith("xmi")) {
-            Resource oldResource = editingDomain.getResourceSet().getResources().get(0);
-            XMIResource newResource = new Bpmn2XMIResourceImpl(uri);
-            editingDomain.getResourceSet().getResources().add(newResource);
-            List<EObject> content = new ArrayList<EObject>(oldResource.getContents());
-            for (EObject eObject : content) {
-                if (eObject.eClass().getName().equals("DocumentRoot")) {
-                    for (EObject cur : eObject.eContents()) {
-                        if (cur instanceof EStringToStringMapEntryImpl)
-                            continue;
-                        newResource.getContents().add(cur);
-                    }
-                } else {
-                    newResource.getContents().add(eObject);
-                }
-            }
-            oldResource.unload();
-            editingDomain.getResourceSet().getResources().remove(oldResource);
-
-        } else {
-            (editingDomain.getResourceSet().getResources().get(0)).setURI(uri);
-        }
+        (editingDomain.getResourceSet().getResources().get(0)).setURI(uri);
         setInputWithNotify(editorInput);
         setPartName(editorInput.getName());
         IProgressMonitor progressMonitor = getActionBars().getStatusLineManager() != null ? getActionBars()
@@ -1520,18 +1530,5 @@ public class Bpmn2Editor extends MultiPageEditorPart implements IEditingDomainPr
      */
     protected boolean showOutlineView() {
         return false;
-    }
-
-    public void saveAsXMI() {
-        if (editingDomain.getResourceSet() != null
-                && editingDomain.getResourceSet().getResources().size() >= 1) {
-            URI oldUri = editingDomain.getResourceSet().getResources().get(0).getURI();
-            URI newUri = oldUri.trimFileExtension().appendFileExtension(BPMN_XMI_FILE_EXTENSION);
-
-            IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-            IFile file = workspaceRoot.getFile(new Path(newUri.toPlatformString(true)));
-            doSaveAs(newUri, new FileEditorInput(file));
-        }
-
     }
 }
